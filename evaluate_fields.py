@@ -18,7 +18,7 @@ if len(raw)==984:
  out['static']={'n':781,'correct':sum(r['truth']==r['prediction'] for r in test),'accuracy':sum(r['truth']==r['prediction'] for r in test)/781,'known_n':len(known),'known_hits':sum(r['truth']==r['prediction'] for r in known),'unknown_n':len(unknown),'unknown_rejected':sum(r['prediction']=='NEW' for r in unknown),'new_detection':binary(test)}
  (P/'static_rows.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2))
 import os
-profile=os.environ.get('DYNAMIC_PROFILE','reuse120-explore')
+profile=os.environ.get('DYNAMIC_PROFILE','paper')
 raw=read('dynamic' if profile=='original' else 'dynamic-'+profile);out.update(dynamic_coverage=len(raw),dynamic_complete=len(raw)==731)
 if len(raw)==731:
  lab=json.loads(gzip.decompress((D/'dynamic_labels.json.gz').read_bytes()));rows=[{**l,'prediction':raw[l['sample_id']]['prediction']} for l in lab]

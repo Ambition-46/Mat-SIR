@@ -8,7 +8,7 @@ from sql.settings import get_mysql_conf
 from sql.intent_sql_executor import IntentSqlExecutor
 from pathlib import Path
 from types import SimpleNamespace
-from apps.intent_engine.reuse import acceptance, THRESHOLD
+from apps.intent_engine.reuse import acceptance, THRESHOLD, MODEL as REUSE_MODEL
 from apps.intent_engine.semantic_mapping import SemanticFieldMapper, MappingAPI, FieldMappingError
 
 def connect():
@@ -25,13 +25,13 @@ class HistoricalMatcher(SemanticFieldMapper):
     def acceptance_score(self,winner,scores,llm,agree,fused):
         return acceptance(winner,scores,llm,agree)
 
-def mapping_api(embedding_model):
+def mapping_api(embedding_model, model=None):
     cfg=SimpleNamespace(api_base=os.environ['MODEL_API_BASE'],api_key=os.environ['MODEL_API_KEY'],
-                        model=os.getenv('MODEL_NAME','qwen-plus'),mode='cloud')
+                        model=model or os.getenv('MODEL_NAME','qwen-plus'),mode='cloud')
     return MappingAPI(cfg,SimpleNamespace(INTENT_EMBEDDING_MODEL=embedding_model))
 
 def mapper(properties,query=False,historical=False):
-    api=mapping_api(os.getenv('EMBEDDING_MODEL','text-embedding-v2'))
+    api=mapping_api(os.getenv('EMBEDDING_MODEL','text-embedding-v2'), REUSE_MODEL if historical else (None if query else 'qwen-plus'))
     matcher_class=HistoricalMatcher if historical else SemanticFieldMapper
     threshold=THRESHOLD if historical else (.75 if query else .8498682050406933)
     return matcher_class(properties,api.nominate,api.embed,threshold,

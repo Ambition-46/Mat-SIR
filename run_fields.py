@@ -3,7 +3,7 @@ import sys,json,time,logging,os
 from pathlib import Path
 from types import SimpleNamespace
 from concurrent.futures import ThreadPoolExecutor,as_completed
-from apps.intent_engine.reuse import acceptance, THRESHOLD
+from apps.intent_engine.reuse import acceptance, THRESHOLD, MODEL as REUSE_MODEL
 import gzip
 from apps.intent_engine.semantic_mapping import SemanticFieldMapper, MappingAPI, FieldMappingError
 P=Path(__file__).resolve().parent
@@ -11,7 +11,7 @@ api=SimpleNamespace(base=os.environ["MODEL_API_BASE"],key=os.environ["MODEL_API_
 def read_input(name):
  with gzip.open(P/"inputs"/(name+".json.gz"),"rt") as stream:
   return json.load(stream)
-MODE=sys.argv[1];MODEL='qwen-plus'
+MODE=sys.argv[1];MODEL='qwen-plus' if MODE=='static' or os.getenv('DYNAMIC_PROFILE','paper')!='paper' else REUSE_MODEL
 if MODE not in ('static','dynamic'):raise ValueError('Expected static or dynamic')
 inputs=read_input('static_inputs');vocabulary=read_input('static_vocabulary')
 settings=SimpleNamespace(INTENT_API_ATTEMPTS=4,INTENT_MAPPING_TIMEOUT=90,INTENT_EMBEDDING_MODEL=api.embedding_model)
@@ -31,22 +31,24 @@ else:
    name=r['name'] if names.count(r['name'])==1 else r['name']+' [entry '+r['id']+']'
    catalog[name]=r['description'];id_by_name[name]=r['id']
   tasks.append({'sample_id':row['sample_id'],'source':row['source'],'catalog':catalog,'id_by_name':id_by_name})
- profiles = {"original": .8449642479419708, "reuse120-dev": .8859228696498564, "reuse120-explore": THRESHOLD, "dev-calibrated": .8704374672594225,
+ profiles = {"original": .8449642479419708, "reuse120-dev": .8859228696498564, "paper": THRESHOLD, "reuse120-explore": .9067876983114506, "dev-calibrated": .8704374672594225,
              "exploratory-135": .8714193437317926}
- profile = os.environ.get("DYNAMIC_PROFILE", "reuse120-explore")
+ profile = os.environ.get("DYNAMIC_PROFILE", "paper")
  threshold = profiles[profile]
 folder=P/'fields'/MODE
 if MODE == 'dynamic' and profile != 'original':
  folder=P/'fields'/('dynamic-'+profile)
 class TracedMapper(SemanticFieldMapper):
  def acceptance_score(self,winner,scores,llm,agree,fused):
+  if MODE == 'dynamic' and profile == 'paper':
+   return acceptance(winner,scores,llm,agree)
   if MODE != 'dynamic' or profile not in ('reuse120-dev','reuse120-explore'):
    return super().acceptance_score(winner,scores,llm,agree,fused)
   def margin(values):
    return values[winner]-max((v for k,v in values.items() if k!=winner),default=0)
   if profile=='reuse120-dev':
    return .5*scores[winner]+.5*llm[winner]+.1*margin(llm)
-  return acceptance(winner,scores,llm,agree)
+  return .25*scores[winner]+.75*llm[winner]-.02*agree+.25*margin(scores)+.05*margin(llm)
  def _vector_scores(self,fields):
   output=super()._vector_scores(fields);self.record['vector_scores']=output;return output
 
