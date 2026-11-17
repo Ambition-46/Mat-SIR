@@ -504487,11 +504487,274 @@
   },
   {
     "sample_id": 159,
-    "sql": "SELECT DISTINCT e.data_id\nFROM smart_small.entity_table e\nJOIN smart_small.value_table v \n    ON v.data_id = e.data_id\nJOIN smart_small.value_table v2 \n    ON v2.data_id = e.data_id\nWHERE v.property_id = 22\n    AND v.value != ''\n    AND v.value IS NOT NULL\n    AND CAST(v.value AS DECIMAL(30, 15)) > 600.0\n    AND v2.property_id = 32\n    AND v2.value != ''\n    AND v2.value IS NOT NULL\n    AND CAST(v2.value AS DECIMAL(30, 15)) > 50.0\nORDER BY e.data_id ASC\n",
-    "result": [],
-    "natural_language": "抗拉强度大于600、断面收缩率还大于50的材料有哪些",
-    "natural_language_en": "Which materials have tensile strength exceeding 600 and reduction of area over 50?",
-    "result_data": []
+    "sql": "SELECT DISTINCT e.data_id\nFROM smart_small.entity_table e\nJOIN smart_small.value_table v \n    ON v.data_id = e.data_id\nJOIN smart_small.value_table v2 \n    ON v2.data_id = e.data_id\nWHERE v.property_id = 22\n    AND v.value != ''\n    AND v.value IS NOT NULL\n    AND CAST(v.value AS DECIMAL(30, 15)) > 600.0\n    AND v2.property_id = 32\n    AND v2.value != ''\n    AND v2.value IS NOT NULL\n    AND CAST(v2.value AS DECIMAL(30, 15)) > 45.0\nORDER BY e.data_id ASC\n",
+    "result": [
+      13223449,
+      50002329,
+      50002330,
+      50002344,
+      50002345,
+      50002346,
+      50002347,
+      50002348
+    ],
+    "natural_language": "抗拉强度大于600、断面收缩率还超过45的材料有哪些",
+    "natural_language_en": "Which materials have tensile strength exceeding 600 and reduction of area over 45?",
+    "result_data": [
+      {
+        "_id": "674314f4f10142971f294548",
+        "_meta_id": 13223449,
+        "_tid": 774,
+        "data": {
+          "序号": "125",
+          "基本信息": {
+            "材料牌号": "10Ni3MnCuAl",
+            "炉批号": "16223610232-1",
+            "产品用途": "塑料模具",
+            "尺寸1": "305",
+            "尺寸2": "805"
+          },
+          "化学成分": {
+            "C": "0.17 %",
+            "Mn": "1.68 %",
+            "Si": "0.21 %",
+            "P": "0.006 %",
+            "S": "0.002 %",
+            "Mo": "0.3 %",
+            "Ni": "3.11 %"
+          },
+          "试样信息": {
+            "其它": "Cu0.89，Al1.24",
+            "熔炼方式": "电渣",
+            "机加工性能": "易切削",
+            "低倍检验": "一般疏松0，中心1.0.偏析1.0"
+          },
+          "工艺": {
+            "热加工方式": "锻制",
+            "热处理工艺": "予硬化",
+            "热处理状态1": "时效",
+            "热处理状态2": "予硬"
+          },
+          "性能": {
+            "屈服强度": "1230 MPa",
+            "抗拉强度": "1330 MPa",
+            "延伸率": "16",
+            "断面收缩率": "46 %"
+          },
+          "性能-金相组织": {
+            "金相组织": "贝氏体+马氏体"
+          },
+          "MGE18_标题": "特殊钢-模具钢-力学性能_125",
+          "MGE18_摘要": "特殊钢-模具钢-力学性能",
+          "MGE18_DOI": "None",
+          "MGE18_关键词": "特殊钢, 模具钢, 力学性能",
+          "MGE18_来源": "self-production",
+          "MGE18_引用": "",
+          "MGE18_数据生产者": "",
+          "MGE18_数据生产机构": "",
+          "MGE18_方法": "production"
+        },
+        "title": "特殊钢-模具钢-力学性能"
+      },
+      {
+        "meta": {
+          "数据ID": 50002329,
+          "上传人": "部文韬",
+          "上传时间": "2025-06-11 15:46:19"
+        },
+        "content": {
+          "接箍部件材料常用金属材料力学性能": {
+            "名称": "45钢锻钢件1/2半径处",
+            "热处理状态": "调质",
+            "试样毛坯直径": {
+              "lb": 0.0,
+              "ub": 60.0
+            },
+            "抗拉强度（≥）": 750,
+            "屈服强度（≥）": 500,
+            "断后伸长率A4（≥）": 20,
+            "断面收缩率（≥）": 50,
+            "冲击吸收能KV8，J": {
+              "-20": 20,
+              "20": 32
+            },
+            "硬度": {
+              "lb": 240.0,
+              "ub": 276.0
+            }
+          }
+        }
+      },
+      {
+        "meta": {
+          "数据ID": 50002330,
+          "上传人": "部文韬",
+          "上传时间": "2025-06-11 15:46:19"
+        },
+        "content": {
+          "接箍部件材料常用金属材料力学性能": {
+            "热处理状态": "调质",
+            "试样毛坯直径": {
+              "lb": 61.0,
+              "ub": 125.0
+            },
+            "抗拉强度（≥）": 700,
+            "屈服强度（≥）": 400,
+            "断后伸长率A4（≥）": 20,
+            "断面收缩率（≥）": 50,
+            "硬度": {
+              "lb": 240.0,
+              "ub": 276.0
+            }
+          }
+        }
+      },
+      {
+        "meta": {
+          "数据ID": 50002344,
+          "上传人": "部文韬",
+          "上传时间": "2025-06-11 15:46:20"
+        },
+        "content": {
+          "接箍部件材料常用金属材料力学性能": {
+            "名称": "35CrMoA锻钢件1/2半径处",
+            "热处理状态": "调质",
+            "试样毛坯直径": {
+              "lb": 0.0,
+              "ub": 60.0
+            },
+            "抗拉强度（≥）": 800,
+            "屈服强度（≥）": 600,
+            "断后伸长率A4（≥）": 18,
+            "断面收缩率（≥）": 50,
+            "冲击吸收能KV8，J": {
+              "-20": 42,
+              "20": 54
+            },
+            "硬度": {
+              "lb": 240.0,
+              "ub": 276.0
+            }
+          }
+        }
+      },
+      {
+        "meta": {
+          "数据ID": 50002345,
+          "上传人": "部文韬",
+          "上传时间": "2025-06-11 15:46:20"
+        },
+        "content": {
+          "接箍部件材料常用金属材料力学性能": {
+            "名称": "35CrMoA锻钢件1/2半径处",
+            "热处理状态": "调质",
+            "试样毛坯直径": {
+              "lb": 0.0,
+              "ub": 60.0
+            },
+            "抗拉强度（≥）": 880,
+            "屈服强度（≥）": 700,
+            "断后伸长率A4（≥）": 16,
+            "断面收缩率（≥）": 50,
+            "冲击吸收能KV8，J": {
+              "-20": 27,
+              "20": 42
+            },
+            "硬度": {
+              "lb": 287.0,
+              "ub": 323.0
+            }
+          }
+        }
+      },
+      {
+        "meta": {
+          "数据ID": 50002346,
+          "上传人": "部文韬",
+          "上传时间": "2025-06-11 15:46:20"
+        },
+        "content": {
+          "接箍部件材料常用金属材料力学性能": {
+            "名称": "35CrMoA锻钢件1/2半径处",
+            "热处理状态": "调质",
+            "试样毛坯直径": {
+              "lb": 61.0,
+              "ub": 100.0
+            },
+            "抗拉强度（≥）": 700,
+            "屈服强度（≥）": 500,
+            "断后伸长率A4（≥）": 18,
+            "断面收缩率（≥）": 50,
+            "冲击吸收能KV8，J": {
+              "-20": 27,
+              "20": 42
+            },
+            "硬度": {
+              "lb": 240.0,
+              "ub": 276.0
+            }
+          }
+        }
+      },
+      {
+        "meta": {
+          "数据ID": 50002347,
+          "上传人": "部文韬",
+          "上传时间": "2025-06-11 15:46:20"
+        },
+        "content": {
+          "接箍部件材料常用金属材料力学性能": {
+            "名称": "35CrMoA锻钢件1/2半径处",
+            "热处理状态": "调质",
+            "试样毛坯直径": {
+              "lb": 61.0,
+              "ub": 100.0
+            },
+            "抗拉强度（≥）": 800,
+            "屈服强度（≥）": 650,
+            "断后伸长率A4（≥）": 16,
+            "断面收缩率（≥）": 50,
+            "冲击吸收能KV8，J": {
+              "-20": 20,
+              "20": 42
+            },
+            "硬度": {
+              "lb": 287.0,
+              "ub": 323.0
+            }
+          }
+        }
+      },
+      {
+        "meta": {
+          "数据ID": 50002348,
+          "上传人": "部文韬",
+          "上传时间": "2025-06-11 15:46:20"
+        },
+        "content": {
+          "接箍部件材料常用金属材料力学性能": {
+            "名称": "35CrMoA锻钢件1/2半径处",
+            "热处理状态": "调质",
+            "试样毛坯直径": {
+              "lb": 101.0,
+              "ub": 150.0
+            },
+            "抗拉强度（≥）": 650,
+            "屈服强度（≥）": 450,
+            "断后伸长率A4（≥）": 20,
+            "断面收缩率（≥）": 50,
+            "冲击吸收能KV8，J": {
+              "-20": 27,
+              "20": 42
+            },
+            "硬度": {
+              "lb": 240.0,
+              "ub": 276.0
+            }
+          }
+        }
+      }
+    ]
   },
   {
     "sample_id": 160,
@@ -982964,11 +983227,38 @@
   },
   {
     "sample_id": 414,
-    "sql": "SELECT DISTINCT e.data_id\nFROM smart_small.entity_table e\nJOIN smart_small.value_table v1 \n    ON v1.data_id = e.data_id\nJOIN smart_small.value_table v2 \n    ON v2.data_id = e.data_id\nWHERE v1.property_id = 120\n    AND v1.value = '外部'\n    AND v2.property_id = 121\n    AND v2.value != ''\n    AND v2.value IS NOT NULL\n    AND CAST(v2.value AS DECIMAL(30, 15)) <= 1000\nORDER BY e.data_id ASC;",
-    "result": [],
-    "natural_language": "晶粒位置在外部且体积不超过1000的晶体数据有哪些？",
+    "sql": "SELECT DISTINCT e.data_id\nFROM smart_small.entity_table e\nJOIN smart_small.value_table v1 \n    ON v1.data_id = e.data_id\nJOIN smart_small.value_table v2 \n    ON v2.data_id = e.data_id\nWHERE v1.property_id = 120\n    AND v1.value = '内部'\n    AND v2.property_id = 121\n    AND v2.value != ''\n    AND v2.value IS NOT NULL\n    AND CAST(v2.value AS DECIMAL(30, 15)) <= 1000\nORDER BY e.data_id ASC;",
+    "result": [
+      6445499
+    ],
+    "natural_language": "晶粒位置在内部且体积不超过1000的晶体数据有哪些？",
     "natural_language_en": "Which crystal data have grain position in the interior and volume not exceeding 1000?",
-    "result_data": []
+    "result_data": [
+      {
+        "_id": "673ad6c7f10142971fc1d8ea",
+        "_meta_id": 6445499,
+        "_tid": 2112,
+        "data": {
+          "晶粒编号": "26540",
+          "面数": 6.0,
+          "位置": "内部",
+          "体积": 990.9900000000001,
+          "半径": 6.185862978114518,
+          "表面积": 596.798124589219,
+          "平均宽度": 16.9597214298957,
+          "MGE18_标题": "3D晶粒信息汇总",
+          "MGE18_摘要": "纯铁3D晶粒相关信息",
+          "MGE18_DOI": "无",
+          "MGE18_关键词": "纯铁、3D、晶粒",
+          "MGE18_来源": "self-production",
+          "MGE18_引用": "无",
+          "MGE18_数据生产者": "王浩",
+          "MGE18_数据生产机构": "北京科技大学",
+          "MGE18_方法": "experiment"
+        },
+        "title": "3D晶粒信息汇总"
+      }
+    ]
   },
   {
     "sample_id": 415,
