@@ -44,3 +44,7 @@ evaluation/query_metrics.py 对实际查询结果和参考结果计算 EX 及召
 ## 500 条查询评测集
 
 [完整评测集](inputs/sql_nl_test_samples_500_result_data.json)包含中文问题、英文问题、参考 SQL、参考结果和命中记录明细。使用 sample_id 与 inputs/queries.json 的 test 部分关联。参考 SQL 在 smart_small 上执行。
+
+## 原始材料数据
+
+[原始 JSON 数据目录](datasets/original/)收录 43 份材料数据文件，保留原文件名和内容。
