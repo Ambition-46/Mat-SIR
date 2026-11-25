@@ -12,6 +12,8 @@ from sql.settings import get_mysql_conf
 DUMP = Path(__file__).resolve().parents[1] / 'database/smart_small.sql'
 CORE = {'property_table', 'entity_table', 'value_table'}
 AUXILIARY = (
+    """CREATE TABLE IF NOT EXISTS matsir_property_unit(
+        property_name VARCHAR(100) PRIMARY KEY,standard_unit VARCHAR(100) NOT NULL)""",
     """CREATE TABLE IF NOT EXISTS matsir_source(
         dataset VARCHAR(100) NOT NULL,source_id VARCHAR(255) NOT NULL,data_id BIGINT UNSIGNED UNIQUE,
         PRIMARY KEY(dataset,source_id),FOREIGN KEY(data_id) REFERENCES entity_table(data_id))""",

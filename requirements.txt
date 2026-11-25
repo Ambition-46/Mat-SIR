@@ -5,3 +5,4 @@ numpy>=1.23,<3
 scikit-learn==1.5.2
 threadpoolctl>=3,<4
 joblib>=1.2,<2
+Pint>=0.24,<0.26

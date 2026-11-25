@@ -11,6 +11,8 @@ from types import SimpleNamespace
 from apps.intent_engine.reuse import acceptance, THRESHOLD, MODEL as REUSE_MODEL
 from apps.intent_engine.semantic_mapping import SemanticFieldMapper, MappingAPI, FieldMappingError
 
+from .units import convert, standard_units, normalize_sir
+
 def connect():
     return pymysql.connect(**get_mysql_conf(), cursorclass=pymysql.cursors.DictCursor)
 
@@ -18,7 +20,10 @@ def connect():
 def catalog(db):
     with db.cursor() as cur:
         cur.execute("SELECT property_name,property_description FROM property_table")
-        return {r['property_name']:r['property_description'] for r in cur.fetchall()}
+        properties={r['property_name']:r['property_description'] for r in cur.fetchall()}
+        units=standard_units(cur)
+        return {name:(desc or '') + ('; canonical unit: '+units[name] if name in units else '')
+                for name,desc in properties.items()}
 
 
 class HistoricalMatcher(SemanticFieldMapper):
@@ -116,11 +121,18 @@ def upload(db,payload,online):
 def sync_values(cur,eid):
     # Only entities owned by the upload service reach this function.
     cur.execute("DELETE FROM value_table WHERE data_id=%s",(eid,))
-    cur.execute("SELECT f.raw_value,f.role,p.property_id,p.property_name FROM matsir_field f JOIN property_table p ON p.property_name=f.property_name WHERE f.data_id=%s",(eid,))
+    cur.execute("SELECT f.raw_value,f.unit,f.role,p.property_id,p.property_name FROM matsir_field f JOIN property_table p ON p.property_name=f.property_name WHERE f.data_id=%s",(eid,))
+    observations=cur.fetchall()
+    units=standard_units(cur)
     masks=dict(object=0,operate=0,result=0)
-    for row in cur.fetchall():
+    for row in observations:
         pid=row['property_id']
-        cur.execute("INSERT INTO value_table(data_id,property_id,property_name,value) VALUES (%s,%s,%s,%s)",(eid,pid,row['property_name'],str(json.loads(row['raw_value']))))
+        value=json.loads(row['raw_value'])
+        target=units.get(row['property_name'])
+        if row['unit'] or target:
+            if not target: raise ValueError('Configure standard unit for '+row['property_name'])
+            value=convert(value,row['unit'],target)
+        cur.execute("INSERT INTO value_table(data_id,property_id,property_name,value) VALUES (%s,%s,%s,%s)",(eid,pid,row['property_name'],str(value)))
         if row['role']:
             if pid>=1024: raise ValueError('Property ID exceeds entity role bitmap capacity')
             masks[row['role']]|=1<<pid
@@ -144,6 +156,16 @@ def review(db,p):
         if not cur.fetchone():
             cur.execute("INSERT INTO property_table(property_name,property_description) VALUES (%s,%s)",(p['property'],p['description']))
             cur.execute("INSERT INTO matsir_history VALUES (%s)",(cur.lastrowid,))
+        if p.get('standard_unit'):
+            convert(1,p['standard_unit'],p['standard_unit'])
+            cur.execute("SELECT standard_unit FROM matsir_property_unit WHERE property_name=%s",(p['property'],))
+            registered=cur.fetchone()
+            if registered and registered['standard_unit']!=p['standard_unit']:
+                raise ValueError('Standard unit cannot be changed during review')
+            if not registered:
+                cur.execute("SELECT COUNT(*) AS n FROM value_table WHERE property_name=%s",(p['property'],))
+                if cur.fetchone()['n']: raise ValueError('Register existing values with configure_unit first')
+                cur.execute("INSERT INTO matsir_property_unit VALUES (%s,%s)",(p['property'],p['standard_unit']))
         cur.execute("UPDATE matsir_field SET property_name=%s WHERE data_id=%s AND field=%s AND property_name IS NULL",(p['property'],eid,p['field']))
         if cur.rowcount!=1: raise ValueError('Pending observation not found')
         sync_values(cur,eid)
@@ -174,6 +196,8 @@ def parse(question,db,online):
 
 def query(db,question,online):
     sir=parse(question,db,online)
+    with db.cursor() as cur:
+        sir=normalize_sir(sir,standard_units(cur))
     if online:
         with TemporaryDirectory() as tmp:
             engine=IntentSqlExecutor.from_intent_dict(sir,question,base_dir=Path(tmp))
@@ -187,9 +211,7 @@ def query(db,question,online):
         term=("EXISTS (SELECT 1 FROM value_table v LEFT JOIN matsir_field f ON f.data_id=v.data_id AND f.property_name=v.property_name "
               "WHERE v.data_id=e.data_id AND v.property_name=%s AND REGEXP_LIKE(v.value,'^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?$') AND CAST(v.value AS DOUBLE) "+c['operator']+" %s")
         params.extend([c['field'],c['value']])
-        if c['unit']:
-            term+=' AND f.unit=%s'
-            params.append(c['unit'])
+        # Values and query thresholds now share the registered standard unit.
         terms.append(term+')')
     sql='SELECT e.data_id AS id,e.title AS dataset,s.source_id FROM entity_table e LEFT JOIN matsir_source s USING(data_id) WHERE '+' AND '.join(terms)+' ORDER BY e.data_id'
     with db.cursor() as cur:
