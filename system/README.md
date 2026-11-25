@@ -13,35 +13,23 @@
 
 HTTP 接口包括 /upload、/pending、/review、/query、/api/intent/parse 和 /api/datasets/full_rows。接口使用 POST 和 application/json。重复上传按数据集、源记录号与原字段更新；待审字段经确认后写入标准属性值。配置测试数据库后运行 python -m unittest system.test_flow 可验证上传、重复导入、审核、查询与来源回查。
 
-### Canonical units
+### Units from property descriptions
 
-Each physical property has one catalog identity and one registered unit. For example,
-`length` is stored in `m`; observations supplied in `cm` map to `length` and are
-converted before insertion. Do not create separate properties solely for convertible
-units. The source mapping `matsir_field` retains `raw_value` and source `unit`;
-`matsir_property_unit` associates the mapped property with its `standard_unit`.
-Both upload synchronization (including reviewed fields) and query thresholds use
-`system.units`. Queries without a unit use the property's registered unit. Explicit
-incompatible units or missing ingestion units cause an error, never a guessed scale.
-Affine conversions such as Celsius to kelvin are supported. Output values retain the
-standard property unit; this does not introduce automatic conversion of output answers.
+The unit explicitly recorded in `property_table.property_description` is the target
+unit. No separate unit registry or manual unit-registration command is used.
+After semantic matching establishes property identity, upload synchronization and
+query processing compare the input unit to this description unit. Equal units retain
+the original value; different compatible units are converted by the shared Pint
+helper. For example, with `length` described as `长度，单位m`, 150 cm is stored as
+1.5 and a query threshold of 120 cm becomes 1.2. The mapping preserves raw values
+and source units; converted SIR conditions also preserve the original threshold.
 
-Run `python -m system.mysql_import` to add the unit registry. Register catalog units
-before uploading measurements or querying with explicit units:
+Explicit unit labels (`单位为m`, `unit: m`) and unit parentheses (`模量(GPa)`) are
+recognized. Missing, ambiguous, or source-dependent target units are not guessed.
+An explicitly unit-bearing input whose target unit cannot be determined is rejected
+for clarification. Inputs without an explicit unit retain their existing values.
+Conversions are never performed between different properties or incompatible units.
+The obsolete `matsir_property_unit` table, if present, is ignored; no data is dropped.
+Historical data and benchmark results are not migrated by this update.
 
-```sh
-python -m system.configure_unit length m --stored-unit cm
-python -m system.configure_unit tensile_strength MPa --stored-unit MPa
-```
-
-`--stored-unit` declares the verified unit of all existing values for that property;
-it is required when any values exist. The command converts those values transactionally
-and records the canonical unit. For mixed-unit legacy properties, first separate and
-verify their source metadata; do not assign a guessed common source unit. Registration
-is idempotent for an unchanged canonical unit. New properties approved through the
-review endpoint can specify `standard_unit`. Existing registered scales are immutable
-through that endpoint.
-
-The archived SQL dump and reported benchmark results are unchanged. Run migrations
-on a working copy and re-evaluate queries before reporting results for converted data.
-Offline regression checks: `python -m unittest system.test_units`.
+Run `python -m unittest system.test_units` for offline regression tests.

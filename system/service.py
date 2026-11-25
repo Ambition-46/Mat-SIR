@@ -11,7 +11,7 @@ from types import SimpleNamespace
 from apps.intent_engine.reuse import acceptance, THRESHOLD, MODEL as REUSE_MODEL
 from apps.intent_engine.semantic_mapping import SemanticFieldMapper, MappingAPI, FieldMappingError
 
-from .units import convert, standard_units, normalize_sir
+from .units import normalize_value, standard_units, normalize_sir
 
 def connect():
     return pymysql.connect(**get_mysql_conf(), cursorclass=pymysql.cursors.DictCursor)
@@ -20,10 +20,7 @@ def connect():
 def catalog(db):
     with db.cursor() as cur:
         cur.execute("SELECT property_name,property_description FROM property_table")
-        properties={r['property_name']:r['property_description'] for r in cur.fetchall()}
-        units=standard_units(cur)
-        return {name:(desc or '') + ('; canonical unit: '+units[name] if name in units else '')
-                for name,desc in properties.items()}
+        return {r['property_name']:r['property_description'] for r in cur.fetchall()}
 
 
 class HistoricalMatcher(SemanticFieldMapper):
@@ -129,9 +126,7 @@ def sync_values(cur,eid):
         pid=row['property_id']
         value=json.loads(row['raw_value'])
         target=units.get(row['property_name'])
-        if row['unit'] or target:
-            if not target: raise ValueError('Configure standard unit for '+row['property_name'])
-            value=convert(value,row['unit'],target)
+        value=normalize_value(value,row['unit'],target)
         cur.execute("INSERT INTO value_table(data_id,property_id,property_name,value) VALUES (%s,%s,%s,%s)",(eid,pid,row['property_name'],str(value)))
         if row['role']:
             if pid>=1024: raise ValueError('Property ID exceeds entity role bitmap capacity')
@@ -156,16 +151,6 @@ def review(db,p):
         if not cur.fetchone():
             cur.execute("INSERT INTO property_table(property_name,property_description) VALUES (%s,%s)",(p['property'],p['description']))
             cur.execute("INSERT INTO matsir_history VALUES (%s)",(cur.lastrowid,))
-        if p.get('standard_unit'):
-            convert(1,p['standard_unit'],p['standard_unit'])
-            cur.execute("SELECT standard_unit FROM matsir_property_unit WHERE property_name=%s",(p['property'],))
-            registered=cur.fetchone()
-            if registered and registered['standard_unit']!=p['standard_unit']:
-                raise ValueError('Standard unit cannot be changed during review')
-            if not registered:
-                cur.execute("SELECT COUNT(*) AS n FROM value_table WHERE property_name=%s",(p['property'],))
-                if cur.fetchone()['n']: raise ValueError('Register existing values with configure_unit first')
-                cur.execute("INSERT INTO matsir_property_unit VALUES (%s,%s)",(p['property'],p['standard_unit']))
         cur.execute("UPDATE matsir_field SET property_name=%s WHERE data_id=%s AND field=%s AND property_name IS NULL",(p['property'],eid,p['field']))
         if cur.rowcount!=1: raise ValueError('Pending observation not found')
         sync_values(cur,eid)

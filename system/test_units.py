@@ -20,3 +20,26 @@ class Units(unittest.TestCase):
         self.assertEqual(normalize_sir(sir,{'length':'m'})['groups'][0]['conditions'][0]['value'],[1,2])
         sir['groups'][0]['conditions'][0]={'field':'length','value':2}
         self.assertEqual(normalize_sir(sir,{'length':'m'})['groups'][0]['conditions'][0]['value'],2)
+
+class DescriptionUnits(unittest.TestCase):
+    def test_description_formats(self):
+        from .units import description_unit
+        for text,expected in [('长度，单位为米','m'),('压缩模量(GPa)，描述','GPa'),('Strength (MPa)','MPa'),('Length; unit: cm','cm'),('累计深度，常见单位为μm','um')]:
+            self.assertEqual(description_unit(text),expected)
+    def test_no_guesses(self):
+        from .units import description_unit
+        for text in ['长度','单位依数据来源定义，例如μm/a','单位为m或cm','单位MPa；单位GPa']:
+            self.assertIsNone(description_unit(text))
+    def test_preserve_equal_and_absent_units(self):
+        from .units import normalize_value
+        self.assertEqual(normalize_value('1.500','厘米','cm'),'1.500')
+        self.assertEqual(normalize_value('2.00',None,'m'),'2.00')
+        with self.assertRaises(ValueError):normalize_value(2,'m',None)
+    def test_reads_property_description(self):
+        from unittest.mock import Mock
+        from .units import standard_units,normalize_sir
+        cur=Mock();cur.fetchall.return_value=[{'property_name':'length','property_description':'长度，单位m'}]
+        units=standard_units(cur)
+        self.assertIn('FROM property_table',cur.execute.call_args[0][0])
+        sir={'groups':[{'conditions':[{'field':'length','unit':'cm','value':120}]}]}
+        self.assertEqual(normalize_sir(sir,units)['groups'][0]['conditions'][0]['value'],1.2)
